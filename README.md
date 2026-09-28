@@ -86,6 +86,8 @@ erDiagram
 
 ```text
 python-api-rest/
+├── start.bat                          # Automated 1-click Quick Start script for Windows
+├── start.sh                           # Automated 1-click Quick Start script for Linux / macOS
 ├── AGENTS.md                          # Workspace rules, English invariants & branching standards
 ├── README.md                          # Comprehensive technical documentation & API spec
 ├── .env.example                       # Template for local environment variables
@@ -150,7 +152,23 @@ python-api-rest/
 - **Git**: Version 2.30 or higher.
 - A modern web browser (Google Chrome, Mozilla Firefox, Microsoft Edge, or Safari).
 
-### Step-by-Step Installation
+### ⚡ Quick Start (1-Click Automated Setup)
+
+You can automatically initialize the virtual environment, install all dependencies, configure `.env`, start the server, and open the web client in your default browser:
+
+- **On Windows**: Double-click `start.bat` or run:
+  ```cmd
+  start.bat
+  ```
+- **On Linux / macOS**: Run:
+  ```bash
+  chmod +x start.sh
+  ./start.sh
+  ```
+
+---
+
+### Manual Step-by-Step Installation
 
 1. **Clone the repository**:
    ```bash
