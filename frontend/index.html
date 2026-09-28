@@ -91,6 +91,9 @@
             <button id="newGameBtn" class="btn btn-primary" type="button">
               + New Game
             </button>
+            <button id="openSteamModalBtn" class="btn btn-steam" type="button">
+              ⚡ Import from Steam
+            </button>
             <button id="manageCategoriesBtn" class="btn btn-secondary" type="button">
               📂 Manage Categories
             </button>
@@ -292,6 +295,58 @@
           </div>
         </article>
 
+        <!-- Steam API Endpoints -->
+        <article class="api-endpoint-card">
+          <div class="endpoint-header">
+            <div class="endpoint-meta">
+              <span class="method-tag method-get">GET</span>
+              <span class="endpoint-path">/api/v1/steam/search</span>
+            </div>
+            <span class="endpoint-summary">Search public Steam Store catalog by keyword</span>
+          </div>
+          <div class="endpoint-body">
+            <p style="font-size: 0.875rem; color: var(--text-muted);">
+              Searches official Steam catalog with zero developer API key requirement. Parameters: <code style="color: var(--accent-cyan);">query</code> (required), <code style="color: var(--accent-cyan);">limit</code>.
+            </p>
+            <div class="try-endpoint-panel">
+              <button class="btn btn-secondary btn-sm try-endpoint-btn" data-endpoint="/steam/search" data-method="GET" data-target="steam-search">
+                ▶ Test in Browser (Search: "Hades")
+              </button>
+              <pre id="res-steam-search" class="code-block response-viewer">// Click "Test in Browser" to execute live request...</pre>
+            </div>
+          </div>
+        </article>
+
+        <article class="api-endpoint-card">
+          <div class="endpoint-header">
+            <div class="endpoint-meta">
+              <span class="method-tag method-post">POST</span>
+              <span class="endpoint-path">/api/v1/games/steam/{app_id}</span>
+            </div>
+            <span class="endpoint-summary">1-Click Import game from Steam (Auto-links/creates Category)</span>
+          </div>
+          <div class="endpoint-body">
+            <p style="font-size: 0.875rem; color: var(--text-muted);">
+              Retrieves complete metadata (title, short description, price, release year, Metacritic rating) from Steam, auto-creates the corresponding Category if missing, and saves the Game into the database.
+            </p>
+          </div>
+        </article>
+
+        <article class="api-endpoint-card">
+          <div class="endpoint-header">
+            <div class="endpoint-meta">
+              <span class="method-tag method-get">GET</span>
+              <span class="endpoint-path">/api/v1/games/{id}/steam-stats</span>
+            </div>
+            <span class="endpoint-summary">Fetch live concurrent players from Steam</span>
+          </div>
+          <div class="endpoint-body">
+            <p style="font-size: 0.875rem; color: var(--text-muted);">
+              Queries real-time player counts directly from Steam Web API for any game with an associated Steam AppID.
+            </p>
+          </div>
+        </article>
+
       </div>
     </section>
 
@@ -399,6 +454,36 @@
           </h3>
           <div id="categoryListContainer" class="cat-manager-list">
             <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- MODAL: STEAM SEARCH & IMPORT -->
+  <dialog id="steamModal" closedby="any" aria-labelledby="steamModalTitle">
+    <div class="modal-content" style="max-width: 620px; width: 620px;">
+      <header class="modal-header">
+        <h2 id="steamModalTitle" class="modal-title">⚡ Import from Steam Store</h2>
+        <button id="steamModalCloseBtn" class="modal-close-btn" type="button" aria-label="Close dialog">✕</button>
+      </header>
+      <div class="modal-body">
+        <p style="font-size: 0.875rem; color: var(--text-muted);">
+          Search games on official Steam Store. 1-click import will automatically fetch metadata and link or create the relational category.
+        </p>
+        <div class="search-box" style="width: 100%;">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input 
+            id="steamSearchInput" 
+            type="search" 
+            class="search-input" 
+            placeholder="Search Steam (e.g. Hades, Elden Ring, Hollow Knight)..." 
+            autocomplete="off"
+          >
+        </div>
+        <div id="steamResultsContainer" class="steam-search-results">
+          <div style="text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.9rem;">
+            Type at least 2 characters to search Steam...
           </div>
         </div>
       </div>

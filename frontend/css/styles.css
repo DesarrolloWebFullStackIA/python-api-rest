@@ -1144,3 +1144,94 @@ dialog::backdrop {
 .tab-content.active {
   display: block;
 }
+
+/* Steam Integration Styles */
+.btn-steam {
+  background: linear-gradient(135deg, #171a21, #1b2838);
+  border: 1px solid #2a475e;
+  color: #c7d5e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.btn-steam:hover {
+  background: linear-gradient(135deg, #2a475e, #1b2838);
+  color: #ffffff;
+  border-color: #66c0f4;
+  box-shadow: 0 0 12px rgba(102, 192, 244, 0.3);
+}
+
+.steam-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-height: 380px;
+  overflow-y: auto;
+  margin-top: 0.75rem;
+}
+
+.steam-result-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+}
+
+.steam-result-card:hover {
+  border-color: #66c0f4;
+  background-color: var(--bg-card-hover);
+}
+
+.steam-result-thumb {
+  width: 92px;
+  height: 43px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-primary);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.steam-result-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.steam-result-title {
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.steam-result-sub {
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.steam-badge-interactive {
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.steam-badge-interactive:hover {
+  border-color: #66c0f4;
+  box-shadow: 0 0 8px rgba(102, 192, 244, 0.4);
+}
+
+.steam-player-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #10b981;
+  display: inline-block;
+  animation: pulse-dot 1.5s infinite ease-in-out;
+}
+

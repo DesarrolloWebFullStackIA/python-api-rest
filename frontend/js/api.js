@@ -195,4 +195,40 @@ export const healthApi = {
   }
 };
 
+// Steam Integration API Service
+export const steamApi = {
+  /**
+   * Search Steam Store catalog by term
+   * @param {string} query - Search keyword
+   * @param {number} limit - Maximum number of results
+   * @returns {Promise<Object>} Search response envelope
+   */
+  async search(query, limit = 10) {
+    const res = await apiClient.get('/steam/search', {
+      params: { query, limit }
+    });
+    return res.data;
+  },
+
+  /**
+   * 1-Click Import game from Steam
+   * @param {number} appId - Steam App ID
+   * @returns {Promise<Object>} Created game
+   */
+  async importGame(appId) {
+    const res = await apiClient.post(`/games/steam/${appId}`);
+    return res.data;
+  },
+
+  /**
+   * Get real-time concurrent players for a game
+   * @param {number} gameId - Internal game database ID
+   * @returns {Promise<Object>} Stats response
+   */
+  async getStats(gameId) {
+    const res = await apiClient.get(`/games/${gameId}/steam-stats`);
+    return res.data;
+  }
+};
+
 export default apiClient;
