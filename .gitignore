@@ -223,3 +223,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# GitHub Wiki clone
+python-api-rest.wiki/
