@@ -14,3 +14,12 @@
 - **Error Handling & HTTP Semantics**: Return semantic HTTP codes (`200 OK`, `201 Created`, `204 No Content`, `400 Bad Request`, `404 Not Found`, `422 Unprocessable Entity`, `500 Internal Server Error`). All database operations must handle rollbacks upon exceptions.
 - **Code Style**: Strictly follow PEP 8 and clean architecture boundaries (separation of routes, services, models, schemas, and database session lifecycle).
 - **Testing**: Maintain unit and integration tests using `pytest` and `TestClient`.
+
+## 3. Git Branching Strategy & Workflow
+- **`main` Branch**: Production branch. Contains only thoroughly tested, approved, and stable releases. Direct commits to `main` are prohibited.
+- **`dev` Branch**: Primary development and integration branch. Serves as the base for all feature/phase branches.
+- **Phase Branches (`feature/phase-X-...`)**:
+  - Each phase MUST be developed in its own dedicated branch created from `dev` (e.g. `feature/phase-2-database`).
+  - Commits for subphases are made within this branch following Conventional Commits format.
+  - Upon completion and explicit user approval of the phase, the feature branch is merged into `dev` and cleanly deleted.
+- **Merge to `main`**: `dev` is only merged into `main` when milestone releases or the complete deliverables are validated.
