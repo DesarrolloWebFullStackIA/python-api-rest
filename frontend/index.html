@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="VaporStore REST API client and interactive documentation portal for managing video games and relational categories.">
+  <meta name="theme-color" content="#0a0d14">
+  <title>VaporStore | Video Game API Portal & Client</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Application Sticky Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <a href="#" class="brand" aria-label="VaporStore Homepage">
+        <div class="brand-icon">🎮</div>
+        <div>
+          <span class="brand-title">VaporStore</span>
+          <span class="brand-badge">REST API Client</span>
+        </div>
+      </a>
+
+      <div class="header-actions">
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs" aria-label="Application sections">
+          <button id="tabCatalogBtn" class="nav-tab-btn active" type="button">Catalog</button>
+          <button id="tabDocsBtn" class="nav-tab-btn" type="button">API Documentation</button>
+        </nav>
+
+        <!-- Backend Health Status Pill -->
+        <div id="backendStatus" class="status-pill" title="Backend API connection status">
+          <span class="status-dot"></span> Checking API...
+        </div>
+
+        <!-- Direct links to Swagger UI & ReDoc -->
+        <a href="/docs" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Open Interactive OpenAPI Swagger Docs">
+          Swagger /docs ↗
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="app-main">
+
+    <!-- TAB 1: CATALOG & CRUD INTERFACE -->
+    <section id="catalogSection" class="tab-content active" aria-labelledby="catalog-heading">
+      
+      <!-- Hero Banner & System Stats -->
+      <div class="hero-banner">
+        <div class="hero-content">
+          <h1 id="catalog-heading">Video Game Catalog Management</h1>
+          <p>Explore, filter, create, and manage video games and their relational categories with instant real-time synchronization backed by FastAPI &amp; SQLite.</p>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-card">
+            <div id="totalGamesStat" class="stat-value">0</div>
+            <div class="stat-label">Total Games</div>
+          </div>
+          <div class="stat-card">
+            <div id="totalCategoriesStat" class="stat-value">0</div>
+            <div class="stat-label">Categories</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">1:N</div>
+            <div class="stat-label">Relational Model</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls Panel (Search, Filters, Actions) -->
+      <div class="controls-panel">
+        <div class="controls-row-top">
+          <!-- Search Box -->
+          <div class="search-box">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input 
+              id="searchInput" 
+              type="search" 
+              class="search-input" 
+              placeholder="Search games by title or description..." 
+              aria-label="Search games"
+              autocomplete="off"
+            >
+            <button id="searchClearBtn" class="search-clear-btn" type="button" aria-label="Clear search">✕</button>
+          </div>
+
+          <!-- Primary Actions -->
+          <div class="controls-actions">
+            <button id="newGameBtn" class="btn btn-primary" type="button">
+              + New Game
+            </button>
+            <button id="manageCategoriesBtn" class="btn btn-secondary" type="button">
+              📂 Manage Categories
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filters-row">
+          <div class="filter-group">
+            <label for="categoryFilter">Category:</label>
+            <select id="categoryFilter" class="form-select">
+              <option value="">All Categories</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="ratingFilter">Rating:</label>
+            <select id="ratingFilter" class="form-select">
+              <option value="">All Ratings</option>
+              <option value="9.0">★ 9.0+ Masterpiece</option>
+              <option value="8.0">★ 8.0+ Great</option>
+              <option value="7.0">★ 7.0+ Good</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="priceFilter">Max Price:</label>
+            <select id="priceFilter" class="form-select">
+              <option value="">Any Price</option>
+              <option value="0">Free to Play ($0)</option>
+              <option value="20">Under $20</option>
+              <option value="40">Under $40</option>
+              <option value="60">Under $60</option>
+            </select>
+          </div>
+
+          <button id="resetFiltersBtn" class="btn btn-ghost btn-sm" type="button" style="margin-left: auto;">
+            Reset Filters
+          </button>
+        </div>
+
+        <!-- Active Filter Summary -->
+        <div id="activeFiltersSummary" class="filter-summary" style="display: none;"></div>
+      </div>
+
+      <!-- Games Grid -->
+      <div id="gamesGrid" class="games-grid" aria-live="polite">
+        <!-- Populated dynamically via app.js -->
+      </div>
+
+      <!-- Pagination Bar -->
+      <div id="paginationBar" class="pagination-bar" style="display: none;">
+        <div id="paginationInfo" class="pagination-info">Showing 0–0 of 0 games</div>
+        <div class="pagination-controls">
+          <button id="prevPageBtn" class="btn btn-secondary btn-sm" type="button">‹ Previous</button>
+          <button id="nextPageBtn" class="btn btn-secondary btn-sm" type="button">Next ›</button>
+          <div class="filter-group" style="margin-left: 0.5rem;">
+            <label for="pageSizeSelect" style="font-size: 0.8rem;">Per page:</label>
+            <select id="pageSizeSelect" class="form-select" style="padding: 0.25rem 1.75rem 0.25rem 0.5rem; font-size: 0.8rem;">
+              <option value="6" selected>6</option>
+              <option value="12">12</option>
+              <option value="24">24</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- TAB 2: INTERACTIVE API DOCUMENTATION & EXPLORER -->
+    <section id="docsSection" class="tab-content" aria-labelledby="docs-heading">
+      <div class="api-docs-container">
+        
+        <div class="api-intro-card">
+          <h2 id="docs-heading">VaporStore REST API Documentation</h2>
+          <p>
+            VaporStore is an enterprise-grade RESTful API built on <strong>FastAPI</strong>, <strong>SQLAlchemy 2.0+</strong>, and <strong>SQLite/PostgreSQL</strong>.
+            It implements a strict <strong>1:N Relational Model</strong> connecting Categories and Video Games with enforced foreign key constraints and cascade rules.
+          </p>
+          <p style="margin-top: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">
+            Base URL: <code class="code-block" style="display: inline; padding: 0.15rem 0.4rem;">/api/v1</code> &bull; Open API Specs: <a href="/docs" target="_blank" class="footer-link">Swagger UI</a> | <a href="/redoc" target="_blank" class="footer-link">ReDoc</a>
+          </p>
+        </div>
+
+        <!-- Health Check Endpoint -->
+        <article class="api-endpoint-card">
+          <div class="endpoint-header">
+            <div class="endpoint-meta">
+              <span class="method-tag method-get">GET</span>
+              <span class="endpoint-path">/api/v1/health</span>
+            </div>
+            <span class="endpoint-summary">Check API service and database connectivity</span>
+          </div>
+          <div class="endpoint-body">
+            <p style="font-size: 0.875rem; color: var(--text-muted);">Returns health status, application version, database connectivity, and timestamp.</p>
+            <div class="try-endpoint-panel">
+              <button class="btn btn-secondary btn-sm try-endpoint-btn" data-endpoint="/health" data-method="GET" data-target="health">
+                ▶ Test in Browser
+              </button>
+              <pre id="res-health" class="code-block response-viewer">// Click "Test in Browser" to execute live request...</pre>
+            </div>
+          </div>
+        </article>
+
+        <!-- Categories Endpoints -->
+        <article class="api-endpoint-card">
+          <div class="endpoint-header">
+            <div class="endpoint-meta">
+              <span class="method-tag method-get">GET</span>
+              <span class="endpoint-path">/api/v1/categories/</span>
+            </div>
+            <span class="endpoint-summary">List all categories with live game counts</span>
+          </div>
+          <div class="endpoint-body">
+            <p style="font-size: 0.875rem; color: var(--text-muted);">Retrieves all available categories ordered alphabetically, each annotated with its computed count of associated games.</p>
+            <div class="try-endpoint-panel">
+              <button class="btn btn-secondary btn-sm try-endpoint-btn" data-endpoint="/categories/" data-method="GET" data-target="categories">
+                ▶ Test in Browser
+              </button>
+              <pre id="res-categories" class="code-block response-viewer">// Click "Test in Browser" to execute live request...</pre>
+            </div>
+          </div>
+        </article>
+
+        <article class="api-endpoint-card">
+          <div class="endpoint-header">
+            <div class="endpoint-meta">
+              <span class="method-tag method-post">POST</span>
+              <span class="endpoint-path">/api/v1/categories/</span>
+            </div>
+            <span class="endpoint-summary">Create a new category (Unique name required)</span>
+          </div>
+          <div class="endpoint-body">
+            <p style="font-size: 0.875rem; color: var(--text-muted);">Returns HTTP 201 Created on success, or HTTP 400 Bad Request if the name is already taken.</p>
+            <pre class="code-block">{
+  "name": "Action RPG",
+  "description": "Role-playing experiences focused on real-time combat and rich lore."
+}</pre>
+          </div>
+        </article>
+
+        <!-- Games Endpoints -->
+        <article class="api-endpoint-card">
+          <div class="endpoint-header">
+            <div class="endpoint-meta">
+              <span class="method-tag method-get">GET</span>
+              <span class="endpoint-path">/api/v1/games/</span>
+            </div>
+            <span class="endpoint-summary">Query games with search, relational category filter &amp; pagination</span>
+          </div>
+          <div class="endpoint-body">
+            <p style="font-size: 0.875rem; color: var(--text-muted);">
+              Supported query params: <code style="color: var(--accent-cyan);">page</code>, <code style="color: var(--accent-cyan);">page_size</code>, <code style="color: var(--accent-cyan);">category_id</code>, <code style="color: var(--accent-cyan);">search</code>, <code style="color: var(--accent-cyan);">min_rating</code>, <code style="color: var(--accent-cyan);">max_price</code>, <code style="color: var(--accent-cyan);">is_active</code>.
+            </p>
+            <div class="try-endpoint-panel">
+              <button class="btn btn-secondary btn-sm try-endpoint-btn" data-endpoint="/games/" data-method="GET" data-target="games">
+                ▶ Test in Browser
+              </button>
+              <pre id="res-games" class="code-block response-viewer">// Click "Test in Browser" to execute live request...</pre>
+            </div>
+          </div>
+        </article>
+
+        <article class="api-endpoint-card">
+          <div class="endpoint-header">
+            <div class="endpoint-meta">
+              <span class="method-tag method-post">POST</span>
+              <span class="endpoint-path">/api/v1/games/</span>
+            </div>
+            <span class="endpoint-summary">Create a new game linked to a valid category</span>
+          </div>
+          <div class="endpoint-body">
+            <p style="font-size: 0.875rem; color: var(--text-muted);">Returns HTTP 201 Created on success, or HTTP 400 Bad Request if the foreign key category does not exist.</p>
+            <pre class="code-block">{
+  "title": "Elden Ring",
+  "description": "Rise, Tarnished, and let grace guide thee.",
+  "price": 59.99,
+  "release_year": 2022,
+  "rating": 9.6,
+  "steam_app_id": 1245620,
+  "is_active": true,
+  "category_id": 1
+}</pre>
+          </div>
+        </article>
+
+        <article class="api-endpoint-card">
+          <div class="endpoint-header">
+            <div class="endpoint-meta">
+              <span class="method-tag method-delete">DELETE</span>
+              <span class="endpoint-path">/api/v1/categories/{id}</span>
+            </div>
+            <span class="endpoint-summary">Delete category with automatic relational CASCADE</span>
+          </div>
+          <div class="endpoint-body">
+            <p style="font-size: 0.875rem; color: var(--accent-rose);">
+              ⚠️ Relational Integrity: Deleting a category automatically cascades and deletes all associated games from the database.
+            </p>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: ADD / EDIT GAME -->
+  <dialog id="gameModal" closedby="any" aria-labelledby="gameModalTitle">
+    <div class="modal-content">
+      <header class="modal-header">
+        <h2 id="gameModalTitle" class="modal-title">Add New Game</h2>
+        <button id="gameModalCancelBtn" class="modal-close-btn" type="button" aria-label="Close dialog">✕</button>
+      </header>
+
+      <form id="gameForm">
+        <div class="modal-body">
+          <!-- Title -->
+          <div class="form-group">
+            <label class="form-label" for="gameTitleInput">Game Title <span class="req">*</span></label>
+            <input id="gameTitleInput" class="form-input" type="text" required maxlength="150" placeholder="e.g. Hades II">
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label class="form-label" for="gameCategorySelect">Category <span class="req">*</span></label>
+            <select id="gameCategorySelect" class="form-select" required>
+              <option value="" disabled selected>Select a category...</option>
+            </select>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label class="form-label" for="gameDescInput">Description</label>
+            <textarea id="gameDescInput" class="form-textarea" placeholder="Brief synopsis or game features..."></textarea>
+          </div>
+
+          <!-- Price & Release Year Grid -->
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="gamePriceInput">Price ($)</label>
+              <input id="gamePriceInput" class="form-input" type="number" step="0.01" min="0" value="0.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="gameYearInput">Release Year</label>
+              <input id="gameYearInput" class="form-input" type="number" min="1950" max="2100" placeholder="e.g. 2024">
+            </div>
+          </div>
+
+          <!-- Rating & Steam App ID Grid -->
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="gameRatingInput">Rating (0 - 10)</label>
+              <input id="gameRatingInput" class="form-input" type="number" step="0.1" min="0" max="10" placeholder="e.g. 9.5">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="gameSteamIdInput">Steam App ID</label>
+              <input id="gameSteamIdInput" class="form-input" type="number" min="1" placeholder="e.g. 1145360">
+            </div>
+          </div>
+
+          <!-- Is Active Checkbox -->
+          <div class="form-group">
+            <label class="form-checkbox-label" for="gameActiveCheck">
+              <input id="gameActiveCheck" class="form-checkbox" type="checkbox" checked>
+              <span>Active in store catalog</span>
+            </label>
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="document.getElementById('gameModal').close()">Cancel</button>
+          <button id="gameSubmitBtn" type="submit" class="btn btn-primary">Save Game</button>
+        </footer>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- MODAL: CATEGORY MANAGER -->
+  <dialog id="categoryModal" closedby="any" aria-labelledby="categoryModalTitle">
+    <div class="modal-content">
+      <header class="modal-header">
+        <h2 id="categoryModalTitle" class="modal-title">Manage Categories</h2>
+        <button id="categoryModalCloseBtn" class="modal-close-btn" type="button" aria-label="Close dialog">✕</button>
+      </header>
+
+      <div class="modal-body">
+        <!-- New Category Form -->
+        <form id="categoryForm" style="display: flex; flex-direction: column; gap: 0.75rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+          <div class="form-group">
+            <label class="form-label" for="categoryNameInput">Category Name <span class="req">*</span></label>
+            <input id="categoryNameInput" class="form-input" type="text" required maxlength="50" placeholder="e.g. Simulation">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="categoryDescInput">Description</label>
+            <input id="categoryDescInput" class="form-input" type="text" placeholder="Short description of this category...">
+          </div>
+          <button id="saveCategoryBtn" type="submit" class="btn btn-primary btn-sm" style="align-self: flex-end;">
+            Add Category
+          </button>
+        </form>
+
+        <!-- Existing Categories List -->
+        <div>
+          <h3 style="font-size: 0.9rem; margin-bottom: 0.6rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">
+            Existing Categories
+          </h3>
+          <div id="categoryListContainer" class="cat-manager-list">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- MODAL: CONFIRM DELETE -->
+  <dialog id="confirmModal" closedby="any" aria-labelledby="confirmModalTitle">
+    <div class="modal-content">
+      <header class="modal-header">
+        <h2 id="confirmModalTitle" class="modal-title">Confirm Delete</h2>
+      </header>
+      <div class="modal-body">
+        <p id="confirmModalMessage" style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.5;"></p>
+      </div>
+      <footer class="modal-footer">
+        <button id="confirmModalCancelBtn" type="button" class="btn btn-secondary">Cancel</button>
+        <button id="confirmModalProceedBtn" type="button" class="btn btn-danger">Confirm Delete</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container" aria-live="assertive"></div>
+
+  <!-- Application Footer -->
+  <footer class="app-footer">
+    <p><strong>VaporStore API Client</strong> &bull; Production-grade REST API with FastAPI, SQLAlchemy &amp; Vanilla JS.</p>
+    <div class="footer-links">
+      <a href="/docs" target="_blank" class="footer-link">OpenAPI Swagger</a>
+      <a href="/redoc" target="_blank" class="footer-link">ReDoc Specs</a>
+      <a href="/api/v1/health" target="_blank" class="footer-link">Health API</a>
+    </div>
+  </footer>
+
+  <!-- External Library: Axios via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+  <!-- Application Scripts -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

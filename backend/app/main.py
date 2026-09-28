@@ -77,7 +77,8 @@ def root_endpoint():
         "docs_url": "/docs",
         "redoc_url": "/redoc",
         "api_v1_url": "/api/v1",
-        "health_check": "/api/v1/health"
+        "health_check": "/api/v1/health",
+        "client_url": "/client/"
     }
 
 
