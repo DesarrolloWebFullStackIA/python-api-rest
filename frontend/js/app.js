@@ -6,7 +6,7 @@
  * ============================================================================
  */
 
-import { categoriesApi, gamesApi, healthApi } from './api.js';
+import { categoriesApi, gamesApi, healthApi, steamApi } from './api.js';
 
 // Application State
 const state = {
@@ -86,6 +86,13 @@ const elements = {
   confirmModalMessage: document.getElementById('confirmModalMessage'),
   confirmModalCancelBtn: document.getElementById('confirmModalCancelBtn'),
   confirmModalProceedBtn: document.getElementById('confirmModalProceedBtn'),
+
+  // Steam Modal
+  openSteamModalBtn: document.getElementById('openSteamModalBtn'),
+  steamModal: document.getElementById('steamModal'),
+  steamModalCloseBtn: document.getElementById('steamModalCloseBtn'),
+  steamSearchInput: document.getElementById('steamSearchInput'),
+  steamResultsContainer: document.getElementById('steamResultsContainer'),
 
   // Toast Container
   toastContainer: document.getElementById('toastContainer')
@@ -272,7 +279,7 @@ function renderGames(games) {
       : '<span class="rating-badge" style="color: var(--text-dim); border-color: var(--border-color); background: none;">Unrated</span>';
 
     const steamBadge = game.steam_app_id
-      ? `<span class="steam-badge" title="Steam App ID: ${game.steam_app_id}">⚡ Steam ID: ${game.steam_app_id}</span>`
+      ? `<button type="button" class="steam-badge steam-badge-interactive steam-stats-btn" data-game-id="${game.id}" data-app-id="${game.steam_app_id}" title="Click to fetch live concurrent Steam players">⚡ Steam: ${game.steam_app_id}</button>`
       : '';
 
     return `
@@ -316,6 +323,29 @@ function renderGames(games) {
   document.querySelectorAll('.delete-game-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       confirmDeleteGame(Number(btn.dataset.id), btn.dataset.title);
+    });
+  });
+
+  // Attach event listeners to live Steam player stats buttons
+  document.querySelectorAll('.steam-stats-btn').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const gameId = btn.dataset.gameId;
+      const origText = btn.innerHTML;
+      btn.innerHTML = '⚡ Checking...';
+      try {
+        const stats = await steamApi.getStats(gameId);
+        if (stats && stats.player_count !== null) {
+          btn.innerHTML = `<span class="steam-player-dot"></span> 👥 ${stats.player_count.toLocaleString()} online`;
+          btn.title = `Steam AppID ${stats.steam_app_id}: ${stats.player_count.toLocaleString()} current players!`;
+        } else {
+          btn.innerHTML = `⚡ Steam: ${btn.dataset.appId}`;
+          showToast('Steam player stats currently unavailable.', 'info');
+        }
+      } catch (err) {
+        btn.innerHTML = origText;
+        showToast(err.userMessage || 'Could not fetch Steam stats', 'warning');
+      }
     });
   });
 }
@@ -600,6 +630,96 @@ async function checkBackendHealth() {
   }
 }
 
+// Steam Search & Import Controller
+function openSteamModal() {
+  elements.steamSearchInput.value = '';
+  elements.steamResultsContainer.innerHTML = `
+    <div style="text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.9rem;">
+      Type at least 2 characters to search Steam...
+    </div>
+  `;
+  elements.steamModal.showModal();
+  elements.steamSearchInput.focus();
+}
+
+async function searchSteam(query) {
+  if (!query || query.length < 2) {
+    elements.steamResultsContainer.innerHTML = `
+      <div style="text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.9rem;">
+        Type at least 2 characters to search Steam...
+      </div>
+    `;
+    return;
+  }
+
+  elements.steamResultsContainer.innerHTML = `
+    <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+      <span class="spinner"></span> Searching Steam Store...
+    </div>
+  `;
+
+  try {
+    const data = await steamApi.search(query, 8);
+    if (!data.items || data.items.length === 0) {
+      elements.steamResultsContainer.innerHTML = `
+        <div style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.9rem;">
+          No matching games found on Steam for "${escapeHtml(query)}".
+        </div>
+      `;
+      return;
+    }
+
+    elements.steamResultsContainer.innerHTML = data.items.map((item) => {
+      const priceText = item.price === 0 ? 'Free to Play' : `$${Number(item.price).toFixed(2)}`;
+      const thumb = item.image_url || 'https://via.placeholder.com/92x43/1b2838/ffffff?text=Steam';
+      return `
+        <div class="steam-result-card" data-app-id="${item.id}">
+          <img src="${thumb}" alt="${escapeHtml(item.name)}" class="steam-result-thumb" loading="lazy">
+          <div class="steam-result-info">
+            <div class="steam-result-title">${escapeHtml(item.name)}</div>
+            <div class="steam-result-sub">
+              <span>AppID: ${item.id}</span> &bull; 
+              <span style="color: var(--accent-emerald); font-weight: 600;">${priceText}</span>
+            </div>
+          </div>
+          <button class="btn btn-steam btn-sm import-steam-btn" data-app-id="${item.id}" data-name="${escapeHtml(item.name)}" type="button">
+            ⚡ Import
+          </button>
+        </div>
+      `;
+    }).join('');
+
+    // Attach Import Listeners
+    elements.steamResultsContainer.querySelectorAll('.import-steam-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const appId = parseInt(btn.dataset.appId, 10);
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Importing...';
+
+        try {
+          const importedGame = await steamApi.importGame(appId);
+          btn.innerHTML = '✓ Imported';
+          btn.style.borderColor = 'var(--accent-emerald)';
+          btn.style.color = 'var(--accent-emerald)';
+          showToast(`Game "${importedGame.title}" successfully imported from Steam!`, 'success');
+          await loadCategories();
+          await fetchGames();
+        } catch (err) {
+          btn.disabled = false;
+          btn.innerHTML = '⚡ Import';
+          showToast(err.userMessage || 'Failed to import Steam game', 'error');
+        }
+      });
+    });
+  } catch (err) {
+    elements.steamResultsContainer.innerHTML = `
+      <div style="text-align: center; padding: 2rem; color: var(--accent-rose); font-size: 0.9rem;">
+        ${escapeHtml(err.userMessage || 'Failed to search Steam Store.')}
+      </div>
+    `;
+  }
+}
+
 // Interactive API Explorer Runner
 function setupApiExplorer() {
   document.querySelectorAll('.try-endpoint-btn').forEach((btn) => {
@@ -621,6 +741,8 @@ function setupApiExplorer() {
           result = await categoriesApi.getAll();
         } else if (endpoint === '/games/') {
           result = await gamesApi.getAll({ page: 1, page_size: 2 });
+        } else if (endpoint === '/steam/search') {
+          result = await steamApi.search('Hades', 3);
         } else {
           result = { message: `Executed ${method} ${endpoint}` };
         }
@@ -733,6 +855,18 @@ function initEventBindings() {
   elements.newGameBtn.addEventListener('click', openCreateGameModal);
   elements.manageCategoriesBtn.addEventListener('click', openCategoryModal);
 
+  // Steam Modal
+  elements.openSteamModalBtn.addEventListener('click', openSteamModal);
+  elements.steamModalCloseBtn.addEventListener('click', () => elements.steamModal.close());
+
+  const debouncedSteamSearch = debounce((query) => {
+    searchSteam(query);
+  }, 400);
+
+  elements.steamSearchInput.addEventListener('input', (e) => {
+    debouncedSteamSearch(e.target.value.trim());
+  });
+
   // Forms
   elements.gameForm.addEventListener('submit', handleGameFormSubmit);
   elements.gameModalCancelBtn.addEventListener('click', () => elements.gameModal.close());
@@ -755,7 +889,7 @@ function initEventBindings() {
   });
 
   // Accessible light dismiss setup
-  [elements.gameModal, elements.categoryModal, elements.confirmModal].forEach(setupDialogLightDismiss);
+  [elements.gameModal, elements.categoryModal, elements.confirmModal, elements.steamModal].forEach(setupDialogLightDismiss);
 }
 
 // App Initialization
