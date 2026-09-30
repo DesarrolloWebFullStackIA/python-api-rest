@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config.settings import settings
@@ -86,3 +87,18 @@ def root_endpoint():
 frontend_path = Path(__file__).resolve().parent.parent.parent / "frontend"
 if frontend_path.is_dir():
     app.mount("/client", StaticFiles(directory=str(frontend_path), html=True), name="client")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    """
+    Serve favicon to prevent 404 errors from browsers requesting /favicon.ico at root.
+    """
+    favicon_ico = frontend_path / "favicon.ico"
+    if favicon_ico.is_file():
+        return FileResponse(str(favicon_ico), media_type="image/x-icon")
+    favicon_svg = frontend_path / "favicon.svg"
+    if favicon_svg.is_file():
+        return FileResponse(str(favicon_svg), media_type="image/svg+xml")
+    return Response(status_code=204)
+

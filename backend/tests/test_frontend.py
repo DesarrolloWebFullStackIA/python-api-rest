@@ -38,3 +38,16 @@ def test_frontend_static_assets_served(client):
     app_res = client.get("/client/js/app.js")
     assert app_res.status_code == 200
     assert "fetchGames" in app_res.text
+
+
+def test_favicon_endpoints(client):
+    """
+    Test that favicon.ico and favicon.svg endpoints return 200 with appropriate media types.
+    """
+    ico_res = client.get("/favicon.ico")
+    assert ico_res.status_code == 200
+
+    svg_res = client.get("/client/favicon.svg")
+    assert svg_res.status_code == 200
+    assert "<svg" in svg_res.text
+
